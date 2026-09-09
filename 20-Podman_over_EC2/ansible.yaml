@@ -1,0 +1,33 @@
+- name: Deploy private Docker image web app on EC2
+  hosts: ec2_web
+  vars_files:
+    - variables.yaml
+  tasks:
+
+  - name: Update system packages
+    become: yes
+    package:
+      name: podman
+      update_cache: yes
+
+  - name: Login to registry
+    containers.podman.podman_login:
+      username: "{{oci_registry_user}}"
+      password: "{{lookup('ansible.builtin.env', 'OCI_REG_TOKEN')}}"
+      registry: "{{ oci_registry }}"
+    register: login_ret
+  - debug: msg="Login return {{login_ret.stdout}}"
+
+  - name: Create project pod
+    containers.podman.podman_pod:
+      name: "{{ pod_name }}"
+      state: started
+      ports:
+        - "{{ host_port }}:{{ container_port }}"
+
+  - name: Run container
+    containers.podman.podman_container:
+      name: container
+      image: "{{ oci_registry }}/{{ oci_registry_user }}/{{ oci_repo }}"
+      pod: "{{ pod_name }}"
+      state: started

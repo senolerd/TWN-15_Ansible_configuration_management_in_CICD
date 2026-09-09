@@ -1,0 +1,248 @@
+### Stage 3.2 — Verifying LBC pod
+
+- name:  Install EKS LBC and Gateway API CRDs on EKS
+  hosts: localhost
+  connection: local
+  tasks:
+
+  - name: Download LBC Official policy
+    get_url:
+      url: https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.14.1/docs/install/iam_policy.json
+      dest: ./lbc_iam_policy.json
+
+  - name: Create an IAM Managed Policy for LBC
+    amazon.aws.iam_managed_policy:
+      policy_name: LBC-{{project_name}}-policy
+      policy: "{{ lookup('file', 'lbc_iam_policy.json') }}"
+      state: present
+
+  - name: Create a role with description and tags
+    amazon.aws.iam_role:
+      name: LBC-{{project_name}}-role
+      managed_policies:
+      - LBC-{{project_name}}-policy
+      assume_role_policy_document: |
+        {
+            "Version": "2012-10-17",
+            "Statement": [{
+            "Effect": "Allow",
+            "Principal": {"Service": "pods.eks.amazonaws.com"},
+            "Action": ["sts:AssumeRole", "sts:TagSession"]
+            }]
+        }
+      description: Role for LBC in {{project_name}}
+      tags:
+        env: "{{env}}"
+        managedBy: Terraform
+    register: role_return
+
+  - name: Cheking EKS Pod Identity Association for LBC using AWS CLI
+    ansible.builtin.command:
+      argv:
+        - aws
+        - eks
+        - list-pod-identity-associations
+        - --cluster-name={{ cluster_name }}
+        - --region={{ region }}
+        - --namespace=kube-system
+        - --service-account=aws-load-balancer-controller
+    register: association_list
+    changed_when: false
+
+  - name: Create EKS Pod Identity Association for LBC using AWS CLI
+    ansible.builtin.command: 
+      argv:
+        - aws 
+        - eks 
+        - create-pod-identity-association
+        - --cluster-name={{ cluster_name }}
+        - --region={{ region }}
+        - --namespace=kube-system
+        - --service-account=aws-load-balancer-controller
+        - --role-arn={{ role_return.iam_role.arn }}
+    when: (association_list.stdout | from_json).associations|length == 0
+    register: PIA_association_return
+
+  - name: Download K8s Gateway API CRDs
+    ansible.builtin.get_url:
+      url: https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.0/standard-install.yaml
+      dest: ./gateway-api-crds-standard-install.yaml
+      mode: '0664'
+
+  - name: Apply K8s Gateway API CRDs
+    kubernetes.core.k8s:
+      state: present
+      src: ./gateway-api-crds-standard-install.yaml
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+  
+  - name: Add EKS repository
+    kubernetes.core.helm_repository:
+      name: eks
+      repo_url: https://aws.github.io/eks-charts
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      
+  - name: Installing AWS Load Balancer Controller
+    kubernetes.core.helm:
+      name: aws-load-balancer-controller
+      chart_ref: eks/aws-load-balancer-controller
+      chart_version: 3.4.2
+      release_namespace: kube-system
+      create_namespace: true
+      update_repo_cache: true
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      state: present
+      values:
+        clusterName: "{{project_name}}-{{env}}"
+        vpcId: "{{vpc_id}}"
+        region: "{{region}}"
+        serviceAccount:
+          create: true
+          name: "aws-load-balancer-controller"
+        enableServiceMutatorWebhook: false
+      # like  --set-json
+      set_values:
+        - value: 'featureGates={"ALBGatewayAPI":true}'
+          value_type: json
+
+  - name: Create Gateway Class for ALB
+    kubernetes.core.k8s:
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      state: present
+      definition:
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: GatewayClass
+        metadata:
+          name: "alb-gatewayclass-{{project_name}}-{{env}}"
+        spec:
+          controllerName: gateway.k8s.aws/alb
+    register: gatewayclass_return
+
+  - name: Gateway for ALB
+    kubernetes.core.k8s:
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      state: present
+      definition:
+        apiVersion: gateway.networking.k8s.io/v1
+        kind: Gateway
+        metadata:
+          name: alb-gw-{{project_name}}-{{env}}
+          namespace: kube-system
+        spec:
+          gatewayClassName: alb-gatewayclass-{{project_name}}-{{env}}
+          listeners:
+          - name: http
+            protocol: HTTP
+            port: 80
+            allowedRoutes:
+              namespaces:
+                from: All
+# ToDo: Don't forget to create targetgroup settings around here. and making LB internet-facing, the default is not. 
+
+- name: Installing essential GitOps tools
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Create ArgoCD namespace
+    kubernetes.core.k8s:
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      name: argocd
+      api_version: v1
+      kind: Namespace
+      state: present
+
+  - name: Creating ArgoCD deployment from manifest url
+    kubernetes.core.k8s:
+      kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+      namespace: argocd
+      state: present
+      src: "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+
+  - debug: msg="PROJECT HTTPROUTES {{project_httproutes}}"
+
+
+  # Destroy testing:  LoadBAlancer is hanging after cluster deletion because gateway creates load balancer terraform not aware. So the LB and its SG
+  # should be deleted manually. I will give a break for this mind-set of this project at this point
+
+
+
+  # - name: HTTPRoute for ArgoCD
+  #   kubernetes.core.k8s:
+  #     kubeconfig: ../kubeconfig-{{project_name}}-{{env}}
+  #     state: present
+  #     definition:
+  #       apiVersion: gateway.networking.k8s.io/v1
+  #       kind: HTTPRoute
+  #       metadata:
+  #         name: argocd-httproute
+  #       spec:
+  #         parentRefs:
+  #         - name: alb-gw-{{project_name}}-{{env}}
+  #         hostnames:
+  #         - "argo.senolerd.xyz"
+  #         rules:
+  #         - matches:
+  #           - path:
+  #               type: PathPrefix
+  #               value: /
+  #           backendRefs:
+  #           - name: argocd-server
+  #             port: 8080
+  #             kind: Service
+  #             namespance: argocd
+
+
+
+
+
+
+
+# - name: Create HTTPRoute resources with a loop test
+#   kubernetes.core.k8s:
+#     state: present
+#     definition:
+#       apiVersion: gateway.networking.k8s.io/v1
+#       kind: HTTPRoute
+#       metadata:
+#         name: "{{ route.name }}"            # Accesses "argocd_httproute"
+#         namespace: "{{ route.svc_ns }}"    # Accesses "argocd"
+#       spec:
+#         parentRefs:
+#           - group: gateway.networking.k8s.io
+#             kind: Gateway
+#             name: my-gateway
+#             namespace: default
+#         hostnames:
+#           - "{{ route.hostname }}"          # Accesses "argo.senolerd.xyz"
+#         rules:
+#           - backendRefs:
+#               - group: ""
+#                 kind: Service
+#                 name: "{{ route.svc_name }}" # Accesses "argocd-server"
+#                 port: "{{ route.svc_port }}" # Accesses 8080
+#   loop: "{{ my_httproutes }}"
+#   loop_control:
+#     loop_var: route
+
+
+
+
+
+# [
+#      {
+
+#           "hostname": "argo", <-- probably should be taken of and "name" should be used as hostname of FQDN and should be concat with domain name
+#           "svc_name": "argocd-server", 
+#           "svc_port": 8080, 
+#           "svc_ns": "argocd"
+#      }, 
+#      {
+#           "name": "jenkins_httproute",
+#           "hostname": "jenkins.senolerd.xyz", 
+#           "svc_name": "jenkins_probably", 
+#           "svc_port": 8080, 
+#           "svc_ns": "jenkins_ns"
+#      }
+# ]
+
+
+

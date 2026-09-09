@@ -1,0 +1,43 @@
+- name: Deploy private OCI Java Maven app on EC2-Podman
+  gather_facts: false
+  hosts: tag_AnsibleGroup_podman_server # comes from dynamic inventory server who has a tag ansible_group with podman_server value
+  tasks:
+  - name: Wait for server accessible
+    wait_for_connection:
+      delay: 10
+      timeout: 60
+  - name: Update system packages
+    become: yes
+    package:
+      update_cache: yes
+
+  - name: Install Podman
+    become: yes
+    package:
+      name: podman
+      state: present
+
+  - name: Login to registry
+    containers.podman.podman_login:
+      username: "{{oci_registry_user}}"
+      password: "{{lookup('ansible.builtin.env', 'OCI_REG_TOKEN')}}"
+      registry: "{{ oci_registry }}"
+    register: login_ret
+  - debug: msg="Login return {{login_ret.stdout}}"
+
+  - name: Enable lingering user processes
+    command: loginctl enable-linger
+
+  - name: Create project pod
+    containers.podman.podman_pod:
+      name: "{{ pod_name }}"
+      state: started
+      ports:
+        - "{{ host_port }}:{{ container_port }}"
+
+  - name: Run container
+    containers.podman.podman_container:
+      name: container
+      image: "{{ oci_registry }}/{{ oci_registry_user }}/{{ oci_repo }}"
+      pod: "{{ pod_name }}"
+      state: started

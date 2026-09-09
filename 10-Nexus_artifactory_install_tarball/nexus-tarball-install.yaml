@@ -1,0 +1,145 @@
+# in the tarball, the sonatype-work directory holds artifacts and config files.
+# At the update time, sonatype-work should remain, and nexus-{version} can be
+# replaced with new one. To update nexus_tarball_url variable and run the playbook
+
+- name: Nexus Installation via Tarball
+  hosts: nexus_server
+  vars_files:
+    - variables.yaml
+  tasks:
+    # Chores
+    - name: Create a user '{{nexus_user}}' with a home directory
+      become: yes
+      ansible.builtin.user:
+        name: "{{ nexus_user }}"
+        create_home: yes
+
+    - name: Install ACL
+      become: yes
+      package:
+        name: acl
+        state: latest
+
+    - name: Allow Nexus port traffic in public zone
+      become: yes
+      ansible.posix.firewalld:
+        port: 8081/tcp
+        zone: public
+        permanent: true
+        state: enabled
+        immediate: true
+
+
+    - name: Create Nexus directory
+      become: yes
+      ansible.builtin.file:
+        path: "{{ nexus_dir }}"
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_user }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create temporary download directory
+      become: yes
+      ansible.builtin.file:
+        path: "/tmp/{{ nexus_user }}"
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_user }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download Tarball
+      become: yes
+      get_url:
+        url: "{{ nexus_tarball_url }}"
+        dest: "/tmp/{{ nexus_user }}"
+      register: nexus_download_return
+
+    - name: Untar downloaded tarball
+      become: yes
+      unarchive:
+        src: "{{ nexus_download_return.dest }}"
+        dest: "/tmp/{{ nexus_user }}"
+        remote_src: true
+
+    ########################################################################
+    - name: Sonatype-Work dir creation
+      # Note to myself: "sontatype-work" is the custom data to keep, "nexus-{version}" is
+      # application to mess up. "creates" look at if there is a custom data at nexus working
+      # directory, if there isn't that means new installation, and creates from tarball content.
+      become: yes
+      command:
+        cmd: "mv /tmp/{{ nexus_user }}/sonatype-work {{nexus_dir}}/sonatype-work"
+        creates: "{{nexus_dir}}/sonatype-work"
+
+    ########################################################################
+    # Before replacing nexus application binary app should be stopped
+    - name: Check Nexus pid file
+      become: yes
+      stat:
+        path: "{{ nexus_dir }}/sonatype-work/nexus3/nexus.pid"
+      register: nexus_pid_file_stat
+
+    ###### If there is a Running Nexus
+    - name: Read Nexus PID if it is exist
+      ansible.builtin.slurp:
+        src: "{{ nexus_dir }}/sonatype-work/nexus3/nexus.pid"
+      register: nexus_pid_b64
+      when: nexus_pid_file_stat.stat.exists
+
+    - name: Set Nexus PID number as fact
+      set_fact: nexus_pid={{nexus_pid_b64.content|b64decode|trim}}
+      when: nexus_pid_file_stat.stat.exists
+
+    - name: Stopping current Nexus application
+      become: yes
+      command: "{{ nexus_dir }}/nexus/bin/nexus stop"
+      when: nexus_pid_file_stat.stat.exists
+
+    - name: Waiting for Nexus completely stopped
+      ansible.builtin.wait_for:
+        path: /proc/{{nexus_pid}}
+        sleep: 1
+        timeout: 300
+        state: absent
+      register: wait_for_return
+      when: nexus_pid_file_stat.stat.exists
+
+    # Replacement
+    # "/tmp/nexus/nexus-3.92.2-01-linux-x86_64.tar.gz"
+    - set_fact: extracted_nexus_dir={{nexus_download_return.dest | split("/") | last | split("-linux-") | first }}
+
+    - name: Move new nexus binary to app directory
+      become: yes
+      command:
+        cmd: "mv /tmp/{{ nexus_user }}/{{ extracted_nexus_dir }} {{nexus_dir}}/"
+        creates: "{{nexus_dir}}/{{ extracted_nexus_dir }}"
+
+    - name: Symbolic link {{extracted_nexus_dir}} to nexus
+      become: yes
+      file:
+        src: "{{nexus_dir}}/{{extracted_nexus_dir}}"
+        dest: "{{nexus_dir}}/nexus"
+        state: link
+
+    - name: Refreshing uid/gid of nexus directory for nexus user
+      become: yes
+      ansible.builtin.file:
+        path: "{{ nexus_dir }}"
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_user }}"
+        state: directory
+        recurse: yes
+
+    - name: Starting Nexus
+      become: yes
+      become_user: nexus
+      command: "/opt/nexus/nexus/bin/nexus start"
+
+    - name: Waiting Nexus get started at port 8081
+      ansible.builtin.wait_for:
+        port: 8081
+        sleep: 1
+        timeout: 300
+        state: present
+    - debug: msg="Nexus started. To access, use http://{{ inventory_hostname }}:8081"

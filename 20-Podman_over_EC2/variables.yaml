@@ -1,0 +1,10 @@
+# Notice: Registry login token should be set OCI_REG_TOKEN as environment variable at server which runs this playbook
+oci_registry: "docker.io"
+oci_registry_user: "alkol"
+oci_repo: java-maven-app:1.1.0-SNAPSHOT-832e0be-b81
+
+pod_name: myproject
+host_port: "3000"
+container_port: "8080"
+
+
