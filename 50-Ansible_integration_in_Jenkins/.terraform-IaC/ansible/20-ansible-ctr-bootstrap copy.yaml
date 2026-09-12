@@ -1,0 +1,23 @@
+- name: Ansible Controller Bootstrap
+  hosts: tag_AnsibleGroup_jenkins_controller
+  gather_facts: false
+  remote_user: ubuntu
+  become: yes
+  tasks:
+  - name: Waiting for Ansible SSH available
+    ansible.builtin.wait_for_connection:
+      delay: 5
+      timeout: 300
+
+  - name: Updating apt repo cache
+    become: yes
+    ansible.builtin.apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: Installing APT Packages
+    become: yes
+    apt:
+      name: "{{item}}"
+      state: latest
+    loop: "{{ lookup('pipe', 'terraform -chdir=../infra output -json ansible_ctl_apt_pkcs') | from_json}}"
