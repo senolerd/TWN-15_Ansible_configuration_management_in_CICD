@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurperClassic
+
 def getAnsibleServerIp(){
 
     withCredentials([
@@ -7,9 +9,12 @@ def getAnsibleServerIp(){
                 usernameVariable: 'AWS_ACCESS_KEY_ID'
             )
         ]) {
-            def ansible_controller_json = sh(script:"ansible-inventory  --host tag_AnsibleGroup_ansible_controller", returnStdout: true).trim()
-            def ansible_controller_data = readJSON text: ansible_controller_json
-            echo "Ansible Controller Public DNS: ${ansible_controller_data.public_dns_name}"
+            // def public_dns = sh(
+            return sh(
+                script: "ansible-inventory -i $SUBDIR/.terraform-IaC/ansible/dynamic.aws_ec2.yaml --host tag_AnsibleGroup_ansible_controller | python3 -c \"import sys, json; print(json.load(sys.stdin)['public_dns_name'])\"",
+                returnStdout: true
+            ).trim()
+            // echo "Ansible Controller Public DNS: ${public_dns}"
         }
 }
 

@@ -1,12 +1,16 @@
-def gs
+def utils
 pipeline {
     agent any 
+    environment{
+        SUBDIR = "50-Ansible_integration_in_Jenkins"
+    }
     stages {
         stage('__init__') {
             steps {
                 script {
                     echo "holding my place"
-                    gs = load "utils.groovy"
+                    utils = load "${env.SUBDIR}/utils.groovy"
+                    ANSIBLE_SERVER = utils.getAnsibleServerIp()
                 }
             }
         }
