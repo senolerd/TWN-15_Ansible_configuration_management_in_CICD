@@ -3,3 +3,4 @@ terraform.tfstate.backup
 .terraform
 kubeconfig-*
 .venv
+JENKINS_INITIAL_ADMIN_KEY_DELETE_ME_LATER.txt

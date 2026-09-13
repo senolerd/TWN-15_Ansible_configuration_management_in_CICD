@@ -26,33 +26,6 @@ resource "aws_instance" "podman_server" {
   }
 }
 
-resource "aws_instance" "testserver" {
-  depends_on             = [module.vpc]
-  ami                    = data.aws_ami.ubuntu.id
-  key_name               = var.keypair_name
-  instance_type          = "t3a.nano"
-  subnet_id              = module.vpc.public_subnet_id
-  vpc_security_group_ids = [module.vpc.deployment_SG_id]
-  region                 = var.region
-  tags = {
-    Name  = "testserver"
-    Hello = "World"
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 data "aws_ami" "ubuntu" {
   most_recent = true
   owners      = ["099720109477"] # Canonical

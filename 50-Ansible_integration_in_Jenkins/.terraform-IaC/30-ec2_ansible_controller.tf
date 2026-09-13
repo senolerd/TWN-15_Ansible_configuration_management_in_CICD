@@ -11,7 +11,7 @@ resource "aws_instance" "ansible-controller" {
   }
   provisioner "local-exec" {
     working_dir = "ansible"
-    command     = "ansible-playbook -i dynamic.aws_ec2.yaml 20-ansible-ctr-bootstrap.yaml"
+    command     = "ansible-playbook 20-ansible-ctr-bootstrap.yaml"
   }
 }
 

@@ -20,6 +20,7 @@ Project Description:
 
 
 
-- Infra has Terrafrom IaC for creating environment for assignment. The ec2 instances aws keypair created by $USER's default ssh private key. Jenkins, Ansible, and the two workstations can be connected via ubuntu user and private ssh key as identity credential file. 
+- Infra has Terrafrom IaC for creating environment for assignment. The ec2 instances aws keypair (named "devops-key") created by $USER's default ssh private key. Jenkins, Ansible, and the two workstations can be connected via ubuntu user and private ssh key as identity credential file. 
 - Jenkins and Ansible instances accept ssh from Terraform runner IP address. Worker nodes accept SSH only from Ansible controller server. Worker nodes can serve from ["80", "443", "8080"] tcp ports by default IaC setting. IaC is created the way can bootstrap workstations with required packages by "workstation_apt_pkcs" at tfvars file but intentionally left blank for complying assignment' order that everything going to be done should be by an ansible playbook passed by Jenkins pipeline. 
 
+- To make Pipeline more autonomous (not setting Ansible server's IP in somewhere in the Jenkins) Ansible Controller's ip address will be get by ansible's aws dynamic inventory plugin that installed on Jenkins server. For this purpose, pipeline will be need AWS credentials as "Username/Password" type Jenkins credential with aws_access_key_id set "username" and "aws_secret_access_key" set password, and the "Treat username as secret" is checked (optional) at Jenkins credential creation window. This credential will be used as temporary environment variable when they are needed. 

@@ -13,7 +13,7 @@ resource "aws_instance" "jenkins" {
 
   provisioner "local-exec" {
     working_dir = "ansible"
-    command = "ansible-playbook -i dynamic.aws_ec2.yaml 10-jenkins-bootstrap.yaml"
+    command = "ansible-playbook 10-jenkins-bootstrap.yaml"
   }
 }
 
@@ -94,58 +94,6 @@ resource "aws_vpc_security_group_ingress_rule" "jenkins-webhook-allow-ipv6" {
   }
 }
 
-
-
-
-
-
-
-# resource "aws_instance" "ansible_controller" {
-#   ami                    = data.aws_ami.ubuntu.id
-#   key_name               = var.keypair_name
-#   instance_type          = var.instance_type
-#   subnet_id              = [for subnet in local.public_subnets : subnet.id][1]
-#   vpc_security_group_ids = [aws_security_group.security_group.id]
-#   region                 = var.region
-#   tags = {
-#     Name = "${var.project_name}_Ansible-Controller"
-#     AnsibleGroup = "ansible_controller"
-#   }
-# }
-
-# resource "aws_instance" "instance" {
-#   count = 2
-#   ami                    = data.aws_ami.ubuntu.id
-#   key_name               = var.keypair_name
-#   instance_type          = var.instance_type
-#   subnet_id              = [for subnet in local.public_subnets : subnet.id][2]
-#   vpc_security_group_ids = [aws_security_group.security_group.id]
-#   region                 = var.region
-#   tags = {
-#     Name = "${var.project_name}_instance_${count.index}"
-#     AnsibleGroup = "instance"
-#   }
-# }
-
-
-
-
-
-
-#   provisioner "local-exec" {
-#     working_dir = "ansible"
-#     command     = <<-EOT
-#           ansible-playbook -i podman_servers.aws_ec2.yml java-maven-on-ec2-podman.yaml \
-#           --private-key ${var.keypair_pem} -u ${var.remote_ec2_user} \
-#           -e "oci_registry=${var.oci_registry}" \
-#           -e "oci_registry_user=${var.oci_registry_user}" \
-#           -e "oci_repo=${var.oci_repo}" \
-#           -e "pod_name=${var.pod_name}" \
-#           -e "host_port=${var.host_port}" \
-#           -e "container_port=${var.container_port}" 
-#       EOT
-#   }
-# }
 
 
 

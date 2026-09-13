@@ -1,5 +1,5 @@
 - name: Ansible Controller Bootstrap
-  hosts: tag_AnsibleGroup_jenkins_controller
+  hosts: tag_AnsibleGroup_ansible_controller
   gather_facts: false
   remote_user: ubuntu
   become: yes
@@ -20,4 +20,4 @@
     apt:
       name: "{{item}}"
       state: latest
-    loop: "{{ lookup('pipe', 'terraform -chdir=../infra output -json ansible_ctl_apt_pkcs') | from_json}}"
+    loop: "{{ lookup('pipe', 'terraform -chdir=../ output -json ansible_ctl_apt_pkcs') | from_json}}"

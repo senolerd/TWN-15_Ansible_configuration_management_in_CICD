@@ -21,7 +21,7 @@ subnets = {
 }
 
 # Jenkins bootstrap settings
-jenkins_apt_pkcs= ["podman", "openjdk-21-jre"]
+jenkins_apt_pkcs= ["podman", "ansible"]
 jenkins_plugins=["ssh-agent"]
 
 # Ansible bootstrap settings

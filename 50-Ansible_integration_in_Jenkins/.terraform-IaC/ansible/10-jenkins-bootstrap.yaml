@@ -20,7 +20,7 @@
     apt:
       name: "{{item}}"
       state: latest
-    loop: "{{ lookup('pipe', 'terraform -chdir=../infra output -json jenkins_apt_pkcs') | from_json}}"
+    loop: "{{ lookup('pipe', 'terraform -chdir=../ output -json jenkins_apt_pkcs') | from_json}}"
 
   - name: Lingering enable for ubuntu user
     command: loginctl enable-linger ubuntu
@@ -72,7 +72,7 @@
       - name: Writing initial password to local file
         ansible.builtin.copy:
           content: "{{temp_adm_pass.stdout| trim}}"
-          dest: ../JENKINS_INITIAL_ADMIN_KEY_DELETE_ME_LATER.txt
+          dest: ../../JENKINS_INITIAL_ADMIN_KEY_DELETE_ME_LATER.txt
           mode: '0644'
         when: initial_pass_looking_result.rc == 0
         delegate_to: localhost
@@ -86,7 +86,7 @@
     containers.podman.podman_container_exec:
       name: jenkins-container
       command: "jenkins-plugin-cli --plugins {{item}}"
-    loop: "{{ lookup('pipe', 'terraform -chdir=../infra output -json jenkins_plugins') | from_json}}"
+    loop: "{{ lookup('pipe', 'terraform -chdir=../ output -json jenkins_plugins') | from_json}}"
 
   - name: Restart a Podman container for loading new plugins
     containers.podman.podman_container:

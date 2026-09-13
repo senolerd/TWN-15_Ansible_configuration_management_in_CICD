@@ -20,4 +20,4 @@
     apt:
       name: "{{item}}"
       state: latest
-    loop: "{{ lookup('pipe', 'terraform -chdir=../infra output -json workstation_apt_pkcs') | from_json}}"
+    loop: "{{ lookup('pipe', 'terraform -chdir=../ output -json workstation_apt_pkcs') | from_json}}"

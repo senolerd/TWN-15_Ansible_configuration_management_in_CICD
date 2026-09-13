@@ -1,9 +1,13 @@
+def gs
 pipeline {
     agent any 
     stages {
         stage('__init__') {
             steps {
-                echo "holding my place"
+                script {
+                    echo "holding my place"
+                    gs = load "utils.gw"
+                }
             }
         }
     }
