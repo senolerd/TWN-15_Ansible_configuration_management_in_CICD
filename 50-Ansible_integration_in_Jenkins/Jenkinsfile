@@ -6,7 +6,7 @@ pipeline {
             steps {
                 script {
                     echo "holding my place"
-                    gs = load "utils.gw"
+                    gs = load "utils.groovy"
                 }
             }
         }
