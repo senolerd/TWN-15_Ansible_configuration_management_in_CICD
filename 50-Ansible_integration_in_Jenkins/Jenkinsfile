@@ -9,8 +9,9 @@ pipeline {
             steps {
                 script {
                     utils = load "${env.SUBDIR}/utils.groovy"
-                    env.ANSIBLE_SERVER = utils.getAnsibleServerIp()
-                    echo ANSIBLE_SERVER
+                    utils.getAnsibleServerIp()
+                    // env.ANSIBLE_SERVER = utils.getAnsibleServerIp()
+                    // echo ANSIBLE_SERVER
                 }
             }
         }
