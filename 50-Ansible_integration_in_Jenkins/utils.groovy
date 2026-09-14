@@ -5,7 +5,7 @@ def getAnsibleServerIp(){
     withCredentials([
             usernamePassword(
                 credentialsId: 'aws_acc_key_and_sec', 
-                usernameVariable: 'AWS_ACCESS_KEY_ID'
+                usernameVariable: 'AWS_ACCESS_KEY_ID',
                 passwordVariable: 'AWS_SECRET_ACCESS_KEY', 
             )
         ]) {
