@@ -14,8 +14,7 @@ pipeline {
                     echo ANSIBLE_SERVER
                 }
                 sshagent(credentials: ['devops_ssh_priv'], executable: '') {
-                    def conn_snipped = '-o StrictHostKeyChecking=no ubuntu@$ANSIBLE_SERVER'
-                   sh "ssh $conn_snipped ls /"
+                   sh 'ssh -o StrictHostKeyChecking=no ubuntu@$ANSIBLE_SERVER ls /' 
                 }
             }
         }
