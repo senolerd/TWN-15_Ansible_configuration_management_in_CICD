@@ -15,13 +15,13 @@ Project Description:
     c. Copy the ssh keys for the Ansible Managed Node servers to the Ansible Control Node server
     d. Install Ansible, Python3 and Boto3 on the Ansible Control Node server
     e. With everything installed and copied to the remote Ansible Control Node server, execute the playbook remotely on that Control Node that will configure the 2 EC2 Managed Nodes
-    
+
 • Personal opinion summary: This assignments purpose, creating ephemeral/custom ansible playbooks, transferring them to Ansible controller to set/change workstations. Multi-layer automation practice. I add another sub-layer with .terraform-IaC to create environment instead of installing environment manually.  
 
 
 
 ## .terraform-IaC
-It is not part of the assignment, just creating the environment. 
+It is not part of the assignment, just creating the environment. AWS CLI credentials should be set for terraform runner shell before applying terraform configurations
 ### IaC summary;
 - Jenkins server: Ubuntu with EC2  "devops-key" EC2 key-pair for "ubuntu" user. "openjdk-25-jre", "ansible", "python3-boto3" apt packages are being installed initially. Has its own EC2 security group with SSH and 80080 allowed from Terraform runner IP. Also "ssh-agent" plugin is being installed but Jenkins needs a restart after setting up (ToDo: Should be fixed).
 - Ansible Controller server: Ubuntu with EC2  "devops-key" EC2 key-pair for "ubuntu" user. "ansible", "python3-boto3" apt packages are being installed initially. Has its own EC2 security group with SSH allowed from Terraform runner IP for initial setup and controlling purpose, not overlay assignment workflow.
