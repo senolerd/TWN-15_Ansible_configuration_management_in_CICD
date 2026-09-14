@@ -6,9 +6,9 @@ output "jenkins_public_public_dns" {
   value = aws_instance.jenkins.public_dns
 }
 
-output "ansible_public_public_dns" {
-  value = aws_instance.ansible-controller.public_dns
-}
+# output "ansible_public_public_dns" {
+#   value = aws_instance.ansible-controller.public_dns
+# }
 
 
 # Output variables what will be pulled by Ansible

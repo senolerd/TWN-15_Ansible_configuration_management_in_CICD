@@ -8,9 +8,9 @@ pipeline {
         stage('__init__') {
             steps {
                 script {
-                    echo "holding my place"
                     utils = load "${env.SUBDIR}/utils.groovy"
-                    ANSIBLE_SERVER = utils.getAnsibleServerIp()
+                    env.ANSIBLE_SERVER = utils.getAnsibleServerIp()
+                    echo ANSIBLE_SERVER
                 }
             }
         }

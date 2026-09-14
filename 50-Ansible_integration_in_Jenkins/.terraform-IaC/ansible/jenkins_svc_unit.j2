@@ -1,0 +1,9 @@
+Description=Jenkins Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/java -jar {{ jenkins_war_path }}
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
