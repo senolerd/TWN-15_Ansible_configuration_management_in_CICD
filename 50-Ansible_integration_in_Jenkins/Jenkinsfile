@@ -9,9 +9,13 @@ pipeline {
             steps {
                 script {
                     utils = load "${env.SUBDIR}/utils.groovy"
-                    utils.getAnsibleServerIp()
-                    // env.ANSIBLE_SERVER = utils.getAnsibleServerIp()
-                    // echo ANSIBLE_SERVER
+                    // utils.getAnsibleServerIp()
+                    env.ANSIBLE_SERVER = utils.getAnsibleServerIp()
+                    echo ANSIBLE_SERVER
+                }
+                sshagent(credentials: ['devops_ssh_priv'], executable: '') {
+                    def conn_snipped = '-o StrictHostKeyChecking=no ubuntu@$ANSIBLE_SERVER'
+                   sh 'ssh $conn_snipped ls /' 
                 }
             }
         }

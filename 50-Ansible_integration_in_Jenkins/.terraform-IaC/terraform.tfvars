@@ -21,7 +21,7 @@ subnets = {
 }
 
 # Jenkins bootstrap settings
-jenkins_apt_pkcs= ["openjdk-25-jre", "ansible"]
+jenkins_apt_pkcs= ["openjdk-25-jre", "ansible", "python3-boto3"]
 jenkins_plugins=["ssh-agent"]
 
 # Ansible bootstrap settings
