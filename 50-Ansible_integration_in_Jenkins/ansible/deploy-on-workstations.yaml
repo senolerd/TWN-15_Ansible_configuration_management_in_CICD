@@ -1,9 +1,9 @@
 - name: Workstation Works
-  hosts: tag_AnsibleGroup_workstation
+  hosts: AnsibleGroup_workstation
   remote_user: ubuntu
   gather_facts: false
   tasks:
-    - name: Wait for Jenkins SSH available
+    - name: Wait for SSH available
       ansible.builtin.wait_for_connection:
         delay: 5
         timeout: 300

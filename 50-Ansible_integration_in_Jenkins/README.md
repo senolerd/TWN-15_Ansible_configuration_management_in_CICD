@@ -31,6 +31,7 @@ IaC Summary:
 - Jenkins server: Ubuntu with EC2  "devops-key" EC2 key-pair for "ubuntu" user. "openjdk-25-jre", "ansible", "python3-boto3" apt packages are being installed initially. Has its own EC2 security group with SSH and 80080 allowed from Terraform runner IP. Also "ssh-agent" plugin is being installed but Jenkins needs a restart after setting up (ToDo: Should be fixed).
 - Ansible Controller server: Ubuntu with EC2  "devops-key" EC2 key-pair for "ubuntu" user. "ansible", "python3-boto3" apt packages are being installed initially. Has its own EC2 security group with SSH allowed from Terraform runner IP for initial setup and controlling purpose, not overlay assignment workflow.
 - Workstation servers: Ubuntu with EC2  "devops-key" EC2 key-pair for "ubuntu" user. They have their own security group and can accept SSH from only Ansible controller and "80", "443", "8080" ports globally. (ToDo: Modify this part after the project done)
+- export AWS_ACCESS_KEY_ID='AK123' export AWS_SECRET_ACCESS_KEY='abc123'
 
 
 

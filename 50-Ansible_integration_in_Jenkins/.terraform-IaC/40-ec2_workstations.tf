@@ -55,14 +55,15 @@ resource "aws_vpc_security_group_ingress_rule" "workstations-public-ports" {
 }
 
 # SSH access from Ansible Controller
-resource "aws_vpc_security_group_ingress_rule" "ansibl-controller-access-for-workstation" {
+resource "aws_vpc_security_group_ingress_rule" "ansible-controller-access-for-workstation" {
   region            = var.region
   security_group_id = aws_security_group.workstations-sg.id
-  cidr_ipv4         = "${aws_instance.ansible-controller.public_ip}/32"
+  referenced_security_group_id = aws_security_group.ansible-controller-sg.id
+  # cidr_ipv4         = "${aws_instance.ansible-controller.public_ip}/32"
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
-  description       = "SSH access for Ansible Controller"
+  description       = "SSH access for Ansible Controller private IP"
   tags = {
     Name = "ssh-from-ansible-controller"
   }

@@ -19,7 +19,6 @@ pipeline {
                         sh 'rsync -av $PROJECT_DIR/ansible ubuntu@$ANSIBLE_SERVER:~/'
                         sh 'ssh ubuntu@$ANSIBLE_SERVER ls -al ~/ansible'
                         withCredentials([usernamePassword(credentialsId: 'aws_acc_key_and_sec', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                            sh 'env'
                             sh '''ssh ubuntu@$ANSIBLE_SERVER \
                                 AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
                                 AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \

@@ -55,7 +55,7 @@ resource "aws_vpc_security_group_ingress_rule" "ansible-ssh-from-jenkins-ipv4" {
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
-  description       = "SSH access for Jenkins"
+  description       = "SSH access for Jenkins private ip address"
   tags = {
     Name = "ansible-ssh-from-ansible"
   }
