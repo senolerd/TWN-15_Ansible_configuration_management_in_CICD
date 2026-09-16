@@ -3,9 +3,31 @@ plugin: amazon.aws.aws_ec2
 regions:
 - us-east-1
 
+
+# How i want group them
+keyed_groups:
+- key: tags.AnsibleGroup # based on this tag
+  prefix: AnsibleGroup
+
+# How grouped items will be presented 
+# 
 hostnames: 
   - name: private-ip-address
 
-keyed_groups:
-- key: tags.AnsibleGroup
-  prefix: AnsibleGroup
+
+# Result
+
+# @all:
+#   |--@ungrouped:
+#   |--@aws_ec2:
+#   |  |--10.10.4.237
+#   |  |--10.10.8.107
+#   |  |--10.10.2.187
+#   |  |--10.10.8.231
+#   |--@AnsibleGroup_ansible_controller:
+#   |  |--10.10.4.237
+#   |--@AnsibleGroup_workstation:
+#   |  |--10.10.8.107
+#   |  |--10.10.8.231
+#   |--@AnsibleGroup_jenkins_controller:
+#   |  |--10.10.2.187
