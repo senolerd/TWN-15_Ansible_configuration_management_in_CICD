@@ -1,5 +1,5 @@
 - name: Ansible Controller Bootstrap
-  hosts: tag_AnsibleGroup_workstation
+  hosts: AnsibleGroup_workstation
   gather_facts: false
   remote_user: ubuntu
   become: yes
