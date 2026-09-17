@@ -33,11 +33,15 @@ pipeline {
         }
 
         stage('Preparing Ansible Controller ') {
-            utils.copyConfigsToAnsibleController()
+            steps {
+                utils.copyConfigsToAnsibleController()
+            }
         }
 
         stage('Running playbook for Workstations') {
-            utils.copyConfigsToAnsibleController()
+            steps{
+                utils.copyConfigsToAnsibleController()
+            }
         }
     }
 
