@@ -43,7 +43,7 @@ pipeline {
         stage('Running playbook for Workstations') {
             steps{
                 script{
-                    utils.copyConfigsToAnsibleController()
+                    utils.runAnsiblePlaybook()
                 }
             }
         }
