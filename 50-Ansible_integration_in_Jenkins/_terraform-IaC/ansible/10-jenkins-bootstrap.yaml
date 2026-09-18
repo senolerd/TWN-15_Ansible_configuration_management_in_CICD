@@ -79,7 +79,7 @@
           mode: '0644'
         when: initial_pass_looking_result.rc == 0
         delegate_to: localhost
-      - debug: msg="Initial Admin Password is {{temp_adm_pass.stdout | trim}}"
+      - debug: msg="Initial Jenkins Admin password is {{temp_adm_pass.stdout | trim}}"
         when: initial_pass_looking_result.rc == 0
 
   - name: Install Jenkins plugins

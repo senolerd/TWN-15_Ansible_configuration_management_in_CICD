@@ -2,9 +2,7 @@ variable "project_name" { type = string }
 variable "environment" { type = string }
 variable "instance_type" { type = string }
 variable "keypair_name" { type = string } # on aws
-variable "keypair_pem_local" { type = string } # local location
 variable "domain_name" { type = string }
-
 
 # VPC settings
 variable "region" { type = string }
@@ -17,8 +15,6 @@ variable "subnets" {
     is_public = bool
   }))
 }
-
-
 
 # jenkins server apt packages
 variable "jenkins_apt_pkcs" { type = list(string) }

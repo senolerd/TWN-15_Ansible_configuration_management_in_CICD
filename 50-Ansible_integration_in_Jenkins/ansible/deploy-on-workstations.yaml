@@ -10,3 +10,12 @@
 
     - name: Manually gather facts
       ansible.builtin.setup:
+
+    - name: Install Podman
+      become: yes
+      apt:
+        name: podman
+        state: latest
+
+    - name: Lingering enable for ubuntu user
+      command: loginctl enable-linger ubuntu

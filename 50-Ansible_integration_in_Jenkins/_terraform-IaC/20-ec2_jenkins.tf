@@ -67,7 +67,6 @@ resource "aws_vpc_security_group_ingress_rule" "jenkins-ssh-for-myip-ipv4" {
 resource "aws_vpc_security_group_ingress_rule" "jenkins-webhook-allow-ipv4" {
   region            = var.region
   security_group_id = aws_security_group.jenkins-sg.id
-  
   for_each = local.ipv4_hooks
   cidr_ipv4         = each.value
   from_port         = 8080
@@ -82,7 +81,6 @@ resource "aws_vpc_security_group_ingress_rule" "jenkins-webhook-allow-ipv4" {
 resource "aws_vpc_security_group_ingress_rule" "jenkins-webhook-allow-ipv6" {
   region            = var.region
   security_group_id = aws_security_group.jenkins-sg.id
-
   for_each = local.ipv6_hooks
   cidr_ipv6         = each.value
   from_port         = 8080

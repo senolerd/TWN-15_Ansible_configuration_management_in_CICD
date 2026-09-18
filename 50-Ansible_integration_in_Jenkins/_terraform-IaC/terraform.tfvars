@@ -3,7 +3,6 @@ region       = "us-east-1"
 environment = "prod"
 instance_type = "t3.small"
 keypair_name = "devops-key" #on aws
-keypair_pem_local = "~/.ssh/id_rsa" # local location
 domain_name = "senolerd.xyz"
 
 
@@ -28,5 +27,5 @@ jenkins_plugins=["ssh-agent", "ssh-steps"]
 ansible_ctl_apt_pkcs=["ansible", "python3-boto3"]
 
 # Workstations bootstrap settings
-workstation_apt_pkcs=[]
+workstation_apt_pkcs=[] # leaving this to overlay ansible playbook
 workstation_public_ports = ["80", "443", "8080"]
