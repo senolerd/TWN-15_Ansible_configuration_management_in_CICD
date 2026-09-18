@@ -24,44 +24,44 @@ Because the two layers are decoupled, the overlay pipeline works the same way wh
 ## 2. Architecture
 
 ```
-                                   GitHub repo
-                                        │
-                                        │ (webhook: push → build, optional)
-                                        ▼
-   ┌───────────────────────────────────────────────────────────────┐
-   │  JENKINS EC2                              tag: AnsibleGroup=jenkins_controller
-   │  SG: 22+8080 from "my IP", 8080 from GitHub webhook CIDRs      │
-   │                                                                 │
-   │   Jenkinsfile (utils.groovy)                                   │
-   │    1. __init__                — resolve Ansible Ctrl's private IP
-   │    2. Preparing Ctrl Node     — rsync playbooks + ssh key over
-   │    3. Running playbook        — ssh in, trigger ansible-playbook
-   └───────────────────────────┬─────────────────────────────────────┘
-                                │ ssh / rsync  (credential: devops_ssh_priv)
-                                │ IP resolved via `ansible-inventory --host`
-                                ▼
-   ┌───────────────────────────────────────────────────────────────┐
-   │  ANSIBLE CONTROLLER EC2                   tag: AnsibleGroup=ansible_controller
-   │  SG: 22 only from Jenkins SG (by reference, not by IP)         │
-   │                                                                 │
-   │   receives: ansible/{ansible.cfg, dyn-hosts.aws_ec2.yaml,      │
-   │              deploy-on-workstations.yaml} + devops_ssh_priv_key│
-   │   runs: ansible-playbook -i dyn-hosts.aws_ec2.yaml             │
-   │           deploy-on-workstations.yaml                          │
-   │   (AWS creds passed in only as scoped env vars, for the        │
-   │    aws_ec2 dynamic-inventory plugin to resolve workstation IPs)│
-   └───────────────────────────┬─────────────────────────────────────┘
-                                │ ssh  (devops-key)
-                                │ targets discovered dynamically, not hardcoded
-                  ┌─────────────┴─────────────┐
-                  ▼                           ▼
-   ┌───────────────────────┐     ┌───────────────────────┐
-   │  WORKSTATION EC2 #0    │     │  WORKSTATION EC2 #1    │  tag: AnsibleGroup=workstation
-   │  SG: 22 only from      │     │  SG: 22 only from      │  SG: 80/443/8080 public
-   │  Ansible Ctrl SG,      │     │  Ansible Ctrl SG,      │
-   │  apps public on 80/443/8080  apps public on 80/443/8080
-   │  → Podman installed    │     │  → Podman installed    │
-   └───────────────────────┘     └───────────────────────┘
+                                     GitHub repo
+                                           │
+                                           │ (webhook: push → build, optional)
+                                           ▼
+   ┌──────────────────────────────────────────────────────────────────────────────┐
+   │ JENKINS EC2                             tag: AnsibleGroup=jenkins_controller │
+   │ SG: 22+8080 from "my IP", 8080 from GitHub webhook CIDRs                     │
+   │                                                                              │
+   │  Jenkinsfile (utils.groovy)                                                  │
+   │   1. __init__                — resolve Ansible Ctrl's private IP             │
+   │   2. Preparing Ctrl Node     — rsync playbooks + ssh key over                │
+   │   3. Running playbook        — ssh in, trigger ansible-playbook              │
+   └──────────────────────────────────────────────────────────────────────────────┘
+                                           │ ssh / rsync  (credential: devops_ssh_priv)
+                                           │ IP resolved via `ansible-inventory --host`
+                                           ▼
+   ┌──────────────────────────────────────────────────────────────────────────────┐
+   │ ANSIBLE CONTROLLER EC2                  tag: AnsibleGroup=ansible_controller │
+   │ SG: 22 only from Jenkins SG (by reference, not by IP)                        │
+   │                                                                              │
+   │  receives: ansible/{ansible.cfg, dyn-hosts.aws_ec2.yaml,                     │
+   │            deploy-on-workstations.yaml} + devops_ssh_priv_key                │
+   │  runs: ansible-playbook -i dyn-hosts.aws_ec2.yaml                            │
+   │          deploy-on-workstations.yaml                                         │
+   │  (AWS creds passed in only as scoped env vars, for the                       │
+   │   aws_ec2 dynamic-inventory plugin to resolve workstation IPs)               │
+   └──────────────────────────────────────────────────────────────────────────────┘
+                                           │ ssh  (devops-key)
+                                           │ targets discovered dynamically, not hardcoded
+                  ┌────────────────────────┴──────────┐
+                  ▼                                   ▼
+   ┌─────────────────────────────┐     ┌─────────────────────────────┐
+   │ WORKSTATION EC2 #0          │     │ WORKSTATION EC2 #1          │  tag: AnsibleGroup=workstation
+   │ SG: 22 only from            │     │ SG: 22 only from            │  SG: 80/443/8080 public
+   │  Ansible Ctrl SG,           │     │  Ansible Ctrl SG,           │
+   │  apps public on 80/443/8080 │     │  apps public on 80/443/8080 │
+   │  → Podman installed         │     │  → Podman installed         │
+   └─────────────────────────────┘     └─────────────────────────────┘
 ```
 
 Every SG-to-SG rule above is expressed as `referenced_security_group_id`, not as a CIDR/IP — so the whole chain keeps working even if instances are stopped/started and get new addresses.
